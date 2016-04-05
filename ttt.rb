@@ -226,5 +226,5 @@ class ConsoleUI
   end
 end
 
-# first_game = Game.new
-# first_game.play
+first_game = Game.new
+first_game.play

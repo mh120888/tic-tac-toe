@@ -1,6 +1,7 @@
 # represents game state for tie tac toe
 class Board
   attr_reader :winner, :human_marker, :computer_marker, :computer_turns, :turn, :grid
+  attr_accessor :human_marker
 
   EMPTY_SPACE = ''.freeze
   X_MARKER = 'x'.freeze
@@ -16,13 +17,13 @@ class Board
     [2, 4, 6]
   ].freeze
 
-  def initialize
+  def initialize(human_marker, starting_marker)
     @grid = [EMPTY_SPACE] * 9
     @winner = false
-    @human_marker = X_MARKER
+    @human_marker = human_marker
     @computer_marker = (@human_marker == X_MARKER ? O_MARKER : X_MARKER)
     @computer_turns = 0
-    @turn = human_marker
+    @turn = starting_marker
   end
 
   def deep_copy
@@ -141,14 +142,16 @@ class Game
   attr_reader :board, :computer_player
 
   def initialize
-    @board = Board.new
     @human_player = HumanPlayer.new
     @computer_player = ComputerPlayer.new
     @ui = ConsoleUI.new
   end
 
   def play
-    player = @human_player
+    player = starting_player
+    human_marker = which_marker
+    starting_marker = determine_starting_marker(player, human_marker)
+    @board = Board.new(human_marker, starting_marker)
     until @board.stop_playing?
       @ui.display_board(@board)
       @ui.display_instructions(@board.turn, @board.human_marker)
@@ -158,8 +161,32 @@ class Game
     @ui.display_result(@board)
   end
 
+  def determine_starting_marker(player, human_marker)
+    player == @human_player ? human_marker : ([Board::X_MARKER, Board::O_MARKER] - [human_marker]).first
+  end
+
   def switch_players(current_player)
     current_player == @human_player ? @computer_player : @human_player
+  end
+
+  def starting_player
+    go_first = ''
+    loop do
+      puts "Would you like to go first? (y/n)"
+      go_first = gets.chomp.downcase
+      break if go_first == 'y' || go_first == 'n'
+    end
+    go_first == 'y' ? @human_player : @computer_player
+  end
+
+  def which_marker
+    marker = ''
+    loop do
+      puts "Would you like to play with #{Board::X_MARKER} or #{Board::O_MARKER}?"
+      marker = gets.chomp.downcase
+      break if marker == Board::X_MARKER || marker == Board::O_MARKER
+    end
+    marker
   end
 end
 
@@ -199,5 +226,5 @@ class ConsoleUI
   end
 end
 
-first_game = Game.new
-first_game.play
+# first_game = Game.new
+# first_game.play

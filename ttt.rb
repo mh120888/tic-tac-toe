@@ -15,72 +15,74 @@ class Board
     [2, 5, 8],
     [0, 4, 8],
     [2, 4, 6]
-  ].freeze
+    ].freeze
 
-  def initialize(human_marker, starting_marker)
-    @grid = [EMPTY_SPACE] * 9
-    @winner = false
-    @human_marker = human_marker
-    @computer_marker = (@human_marker == X_MARKER ? O_MARKER : X_MARKER)
-    @computer_turns = 0
-    @turn = starting_marker
-  end
+    def initialize(human_marker, starting_marker)
+      @grid = [EMPTY_SPACE] * 9
+      @winner = false
+      @human_marker = human_marker
+      @computer_marker = (@human_marker == X_MARKER ? O_MARKER : X_MARKER)
+      @computer_turns = 0
+      @turn = starting_marker
+    end
 
-  def deep_copy
-    Marshal::load(Marshal.dump(self))
-  end
+    def deep_copy
+      Marshal::load(Marshal.dump(self))
+    end
 
-  def mark_board(index, marker)
-    @grid[index] = marker
-    @computer_turns += 1 if marker == @computer_marker
-    @turn = marker == @human_marker ? @computer_marker : @human_marker
-  end
+    def mark_board(index, marker)
+      @grid[index] = marker
+      @computer_turns += 1 if marker == @computer_marker
+      @turn = marker == @human_marker ? @computer_marker : @human_marker
+    end
 
-  def check_if_winner(marker)
-    marked_spaces = spaces_taken_by(marker)
-    find_winning_indices(marked_spaces).empty? ? false : @winner = marker
-  end
+    def check_if_winner(marker)
+      marked_spaces = spaces_taken_by(marker)
+      find_winning_indices(marked_spaces).empty? ? false : @winner = marker
+    end
 
-  def board_full?
-    !@grid.include?(EMPTY_SPACE)
-  end
+    def board_full?
+      !@grid.include?(EMPTY_SPACE)
+    end
 
-  def find_spaces
-    @grid.each_index.select { |index| yield index } if block_given?
-  end
+    def find_spaces
+      @grid.each_index.select { |index| yield index } if block_given?
+    end
 
-  def all_taken_spaces
-    find_spaces { |index| @grid[index] == X_MARKER || @grid[index] == O_MARKER }
-  end
+    def all_taken_spaces
+      find_spaces { |index| @grid[index] == X_MARKER || @grid[index] == O_MARKER }
+    end
 
-  def all_free_spaces
-    find_spaces { |index| @grid[index] == EMPTY_SPACE }
-  end
+    def all_free_spaces
+      find_spaces { |index| @grid[index] == EMPTY_SPACE }
+    end
 
-  def spaces_taken_by(marker)
-    find_spaces { |index| @grid[index] == marker }
-  end
+    def spaces_taken_by(marker)
+      find_spaces { |index| @grid[index] == marker }
+    end
 
-  def find_winning_indices(marked_spaces)
-    WINNING_COMBOS.select { |winning_combo| (marked_spaces & winning_combo).length == 3 }.flatten
-  end
+    def find_winning_indices(marked_spaces)
+      WINNING_COMBOS.select { |winning_combo| (marked_spaces & winning_combo).length == 3 }.flatten
+    end
 
-  def is_there_a_winner?
-    check_if_winner(X_MARKER) || check_if_winner(O_MARKER)
-  end
+    def is_there_a_winner?
+      check_if_winner(X_MARKER) || check_if_winner(O_MARKER)
+    end
 
-  def stop_playing?
-    is_there_a_winner? || board_full?
+    def stop_playing?
+      is_there_a_winner? || board_full?
+    end
   end
-end
 
 # responsible for handling user input and updating game state for the human player
 class HumanPlayer
   def find_move(board)
-    valid_play = false
-    until valid_play
+    move = nil
+    loop do
       move = gets.chomp.to_i - 1
       valid_play = (0..8).include?(move) && (board.grid[move] == Board::EMPTY_SPACE)
+      break if valid_play
+      puts "Please enter a number between 1 and 9 that has not already been taken"
     end
     move
   end
@@ -148,8 +150,8 @@ class Game
   end
 
   def play
-    player = starting_player
-    human_marker = which_marker
+    player = @ui.human_plays_first? ? @human_player : @computer_player
+    human_marker = @ui.which_marker
     starting_marker = determine_starting_marker(player, human_marker)
     @board = Board.new(human_marker, starting_marker)
     until @board.stop_playing?
@@ -169,25 +171,6 @@ class Game
     current_player == @human_player ? @computer_player : @human_player
   end
 
-  def starting_player
-    go_first = ''
-    loop do
-      puts "Would you like to go first? (y/n)"
-      go_first = gets.chomp.downcase
-      break if go_first == 'y' || go_first == 'n'
-    end
-    go_first == 'y' ? @human_player : @computer_player
-  end
-
-  def which_marker
-    marker = ''
-    loop do
-      puts "Would you like to play with #{Board::X_MARKER} or #{Board::O_MARKER}?"
-      marker = gets.chomp.downcase
-      break if marker == Board::X_MARKER || marker == Board::O_MARKER
-    end
-    marker
-  end
 end
 
 # console-based view layer
@@ -215,6 +198,26 @@ class ConsoleUI
     sleep(1.5)
   end
 
+  def human_plays_first?
+    go_first = ''
+    loop do
+      puts "Would you like to go first? (y/n)"
+      go_first = gets.chomp.downcase
+      break if go_first == 'y' || go_first == 'n'
+    end
+    go_first == 'y'
+  end
+
+  def which_marker
+    marker = ''
+    loop do
+      puts "Would you like to play with #{Board::X_MARKER} or #{Board::O_MARKER}?"
+      marker = gets.chomp.downcase
+      break if marker == Board::X_MARKER || marker == Board::O_MARKER
+    end
+    marker
+  end
+
   def display_result(board)
     display_board(board)
     puts "Game Over"
@@ -226,5 +229,7 @@ class ConsoleUI
   end
 end
 
-first_game = Game.new
-first_game.play
+if !$testing
+  first_game = Game.new
+  first_game.play
+end

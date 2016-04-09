@@ -81,6 +81,8 @@ class HumanPlayer
     until valid_play
       move = gets.chomp.to_i - 1
       valid_play = (0..8).include?(move) && (board.grid[move] == Board::EMPTY_SPACE)
+      break if valid_play
+      puts "Please enter a number between 1 and 9 that has not already been taken"
     end
     move
   end

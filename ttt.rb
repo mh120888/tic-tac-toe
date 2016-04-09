@@ -226,5 +226,7 @@ class ConsoleUI
   end
 end
 
-first_game = Game.new
-first_game.play
+if !$testing
+  first_game = Game.new
+  first_game.play
+end

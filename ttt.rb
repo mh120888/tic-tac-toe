@@ -1,29 +1,21 @@
 # represents game state for tie tac toe
 class Board
-  attr_reader :winner, :human_marker, :computer_marker, :computer_turns, :turn, :grid
+  attr_reader :winner, :human_marker, :computer_marker, :computer_turns, :turn, :grid, :winning_combos
   attr_accessor :human_marker
 
   EMPTY_SPACE = ''.freeze
   X_MARKER = 'x'.freeze
   O_MARKER = 'o'.freeze
-  WINNING_COMBOS = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
-    ].freeze
 
-    def initialize(human_marker, starting_marker)
-      @grid = [EMPTY_SPACE] * 9
+    def initialize(human_marker, starting_marker, spaces_across)
+      @spaces_across = spaces_across
+      @grid = [EMPTY_SPACE] * (spaces_across ** 2)
       @winner = false
       @human_marker = human_marker
       @computer_marker = (@human_marker == X_MARKER ? O_MARKER : X_MARKER)
       @computer_turns = 0
       @turn = starting_marker
+      @winning_combos = calculate_winning_combos
     end
 
     def deep_copy
@@ -62,7 +54,7 @@ class Board
     end
 
     def find_winning_indices(marked_spaces)
-      WINNING_COMBOS.select { |winning_combo| (marked_spaces & winning_combo).length == 3 }.flatten
+      @winning_combos.select { |winning_combo| (marked_spaces & winning_combo).length == 3 }.flatten
     end
 
     def is_there_a_winner?
@@ -71,6 +63,34 @@ class Board
 
     def stop_playing?
       is_there_a_winner? || board_full?
+    end
+
+    def calculate_winning_combos
+      horizontal_wins + vertical_wins + top_left_to_bottom_right_win + top_right_to_bottom_left_win
+    end
+
+    def horizontal_wins
+      (0..(@spaces_across ** 2 - 1)).each_slice(@spaces_across).to_a
+    end
+
+    def vertical_wins
+      horizontal_wins.transpose
+    end
+
+    def top_left_to_bottom_right_win
+      winning_combo = [0]
+      (@spaces_across - 1).times do
+        winning_combo << winning_combo.last + @spaces_across + 1
+      end
+      [winning_combo]
+    end
+
+    def top_right_to_bottom_left_win
+      winning_combo = [@spaces_across - 1]
+      (@spaces_across - 1).times do
+        winning_combo << winning_combo.last + @spaces_across - 1
+      end
+      [winning_combo]
     end
   end
 
@@ -143,7 +163,7 @@ class Game
     player = @ui.human_plays_first? ? @human_player : @computer_player
     human_marker = @ui.which_marker
     starting_marker = determine_starting_marker(player, human_marker)
-    @board = Board.new(human_marker, starting_marker)
+    @board = Board.new(human_marker, starting_marker, 4)
     until @board.stop_playing?
       @ui.display_board(@board)
       @ui.display_instructions(@board.turn, @board.human_marker)

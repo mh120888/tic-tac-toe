@@ -94,7 +94,7 @@ class ComputerPlayer
 
   def find_move(board)
     minimax(board)
-    @best_move.index
+    @best_move[:space]
   end
 
   def minimax(board)
@@ -102,19 +102,20 @@ class ComputerPlayer
     moves = []
     board.all_free_spaces.each do |space|
       potential_board = board.deep_copy
-      moves << potential_move = PotentialMove.new(space, potential_board.turn)
-      potential_board.mark_board(potential_move.index, potential_move.marker)
-      potential_move.score = minimax(potential_board)
+      # moves << potential_move = PotentialMove.new(space, potential_board.turn)
+      moves << (potential_move = {space: space, score: 0, marker: potential_board.turn})
+      potential_board.mark_board(potential_move[:space], potential_move[:marker])
+      potential_move[:score] = minimax(potential_board)
     end
     @best_move = choose_best_move(moves, board)
-    @best_move.score
+    @best_move[:score]
   end
 
   def choose_best_move(moves, board)
     if board.turn == board.computer_marker
-      moves.sort_by(&:score).reverse.first
+      moves.sort_by { |move| move[:score] }.reverse.first
     else
-      moves.sort_by(&:score).first
+      moves.sort_by{ |move| move[:score] }.first
     end
   end
 
@@ -126,16 +127,6 @@ class ComputerPlayer
     else
       0
     end
-  end
-end
-
-# holds state about a potential move
-class PotentialMove
-  attr_accessor :score, :index, :marker
-  def initialize(index, marker)
-    @index = index
-    @marker = marker
-    @score = 0
   end
 end
 

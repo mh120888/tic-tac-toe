@@ -1,29 +1,21 @@
 # represents game state for tie tac toe
 class Board
-  attr_reader :winner, :human_marker, :computer_marker, :computer_turns, :turn, :grid
+  attr_reader :winner, :human_marker, :computer_marker, :computer_turns, :turn, :grid, :winning_combos, :spaces_across
   attr_accessor :human_marker
 
   EMPTY_SPACE = ''.freeze
   X_MARKER = 'x'.freeze
   O_MARKER = 'o'.freeze
-  WINNING_COMBOS = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
-    ].freeze
 
-    def initialize(human_marker, starting_marker)
-      @grid = [EMPTY_SPACE] * 9
+    def initialize(human_marker, starting_marker, spaces_across)
+      @spaces_across = spaces_across
+      @grid = [EMPTY_SPACE] * (spaces_across ** 2)
       @winner = false
       @human_marker = human_marker
       @computer_marker = (@human_marker == X_MARKER ? O_MARKER : X_MARKER)
       @computer_turns = 0
       @turn = starting_marker
+      @winning_combos = calculate_winning_combos
     end
 
     def deep_copy
@@ -62,7 +54,7 @@ class Board
     end
 
     def find_winning_indices(marked_spaces)
-      WINNING_COMBOS.select { |winning_combo| (marked_spaces & winning_combo).length == 3 }.flatten
+      @winning_combos.select { |winning_combo| (marked_spaces & winning_combo).length == 3 }.flatten
     end
 
     def is_there_a_winner?
@@ -72,6 +64,34 @@ class Board
     def stop_playing?
       is_there_a_winner? || board_full?
     end
+
+    def calculate_winning_combos
+      horizontal_wins + vertical_wins + top_left_to_bottom_right_win + top_right_to_bottom_left_win
+    end
+
+    def horizontal_wins
+      (0..(@spaces_across ** 2 - 1)).each_slice(@spaces_across).to_a
+    end
+
+    def vertical_wins
+      horizontal_wins.transpose
+    end
+
+    def top_left_to_bottom_right_win
+      winning_combo = [0]
+      (@spaces_across - 1).times do
+        winning_combo << winning_combo.last + @spaces_across + 1
+      end
+      [winning_combo]
+    end
+
+    def top_right_to_bottom_left_win
+      winning_combo = [@spaces_across - 1]
+      (@spaces_across - 1).times do
+        winning_combo << winning_combo.last + @spaces_across - 1
+      end
+      [winning_combo]
+    end
   end
 
 # responsible for handling user input and updating game state for the human player
@@ -80,9 +100,9 @@ class HumanPlayer
     move = nil
     loop do
       move = gets.chomp.to_i - 1
-      valid_play = (0..8).include?(move) && (board.grid[move] == Board::EMPTY_SPACE)
+      valid_play = (0..board.spaces_across**2).include?(move) && (board.grid[move] == Board::EMPTY_SPACE)
       break if valid_play
-      puts "Please enter a number between 1 and 9 that has not already been taken"
+      puts "Please enter a number between 1 and #{board.spaces_across**2} that has not already been taken"
     end
     move
   end
@@ -143,10 +163,11 @@ class Game
     player = @ui.human_plays_first? ? @human_player : @computer_player
     human_marker = @ui.which_marker
     starting_marker = determine_starting_marker(player, human_marker)
-    @board = Board.new(human_marker, starting_marker)
+    board_size = @ui.determine_board_size
+    @board = Board.new(human_marker, starting_marker, board_size)
     until @board.stop_playing?
       @ui.display_board(@board)
-      @ui.display_instructions(@board.turn, @board.human_marker)
+      @ui.display_instructions(@board.turn, @board.human_marker, @board)
       @board.mark_board(player.find_move(@board), @board.turn)
       player = switch_players(player)
     end
@@ -167,7 +188,7 @@ end
 class ConsoleUI
   def display_board(board)
     puts
-    board.grid.each_slice(3) do |slice|
+    board.grid.each_slice(board.spaces_across) do |slice|
       slice.each { |space| space == Board::EMPTY_SPACE ? print("_ ") : print("#{space} ") }
       puts
     end
@@ -175,17 +196,27 @@ class ConsoleUI
     puts "=" * 6
   end
 
-  def display_instructions(current_marker, human_marker)
-    current_marker == human_marker ? display_human_instructions : display_computer_instructions
+  def display_instructions(current_marker, human_marker, board)
+    current_marker == human_marker ? display_human_instructions(board) : display_computer_instructions
   end
 
-  def display_human_instructions
-    puts "Your turn. Choose a space, 1-9, to play on the board."
+  def display_human_instructions(board)
+    puts "Your turn. Choose a space, 1-#{board.spaces_across**2}, to play on the board."
   end
 
   def display_computer_instructions
     puts "Computer's turn. He's thinking."
     sleep(1.5)
+  end
+
+  def determine_board_size
+    board_size = 0
+    loop do
+      puts "What size board would you like to play? 3x3 (3) or 4x4 (4)?"
+      board_size = gets.chomp.to_i
+      break if (3..4).include?(board_size)
+    end
+    board_size
   end
 
   def human_plays_first?

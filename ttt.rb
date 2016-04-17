@@ -102,9 +102,8 @@ class ComputerPlayer
     moves = []
     board.all_free_spaces.each do |space|
       potential_board = board.deep_copy
-      # moves << potential_move = PotentialMove.new(space, potential_board.turn)
       moves << (potential_move = {space: space, score: 0, marker: potential_board.turn})
-      potential_board.mark_board(potential_move[:space], potential_move[:marker])
+      potential_boardgit.mark_board(potential_move[:space], potential_move[:marker])
       potential_move[:score] = minimax(potential_board)
     end
     @best_move = choose_best_move(moves, board)

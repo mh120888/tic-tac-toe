@@ -1,4 +1,4 @@
-require_relative '../board'
+require_relative '../lib/board'
 
 RSpec.describe Board do
   board = Board.new(Board::X_MARKER, Board::O_MARKER, 3)

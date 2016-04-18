@@ -7,92 +7,92 @@ class Board
   X_MARKER = 'x'.freeze
   O_MARKER = 'o'.freeze
 
-    def initialize(human_marker, starting_marker, spaces_across)
-      @spaces_across = spaces_across
-      @grid = [EMPTY_SPACE] * (spaces_across ** 2)
-      @winner = false
-      @human_marker = human_marker
-      @computer_marker = (@human_marker == X_MARKER ? O_MARKER : X_MARKER)
-      @computer_turns = 0
-      @turn = starting_marker
-      @winning_combos = calculate_winning_combos
-    end
-
-    def deep_copy
-      Marshal::load(Marshal.dump(self))
-    end
-
-    def mark_board(index, marker)
-      @grid[index] = marker
-      @computer_turns += 1 if marker == @computer_marker
-      @turn = marker == @human_marker ? @computer_marker : @human_marker
-    end
-
-    def check_if_winner(marker)
-      marked_spaces = spaces_taken_by(marker)
-      find_winning_indices(marked_spaces).empty? ? false : @winner = marker
-    end
-
-    def board_full?
-      !@grid.include?(EMPTY_SPACE)
-    end
-
-    def find_spaces
-      @grid.each_index.select { |index| yield index } if block_given?
-    end
-
-    def all_taken_spaces
-      find_spaces { |index| @grid[index] == X_MARKER || @grid[index] == O_MARKER }
-    end
-
-    def all_free_spaces
-      find_spaces { |index| @grid[index] == EMPTY_SPACE }
-    end
-
-    def spaces_taken_by(marker)
-      find_spaces { |index| @grid[index] == marker }
-    end
-
-    def find_winning_indices(marked_spaces)
-      @winning_combos.select { |winning_combo| (marked_spaces & winning_combo).length == 3 }.flatten
-    end
-
-    def is_there_a_winner?
-      check_if_winner(X_MARKER) || check_if_winner(O_MARKER)
-    end
-
-    def stop_playing?
-      is_there_a_winner? || board_full?
-    end
-
-    def calculate_winning_combos
-      horizontal_wins + vertical_wins + top_left_to_bottom_right_win + top_right_to_bottom_left_win
-    end
-
-    def horizontal_wins
-      (0..(@spaces_across ** 2 - 1)).each_slice(@spaces_across).to_a
-    end
-
-    def vertical_wins
-      horizontal_wins.transpose
-    end
-
-    def top_left_to_bottom_right_win
-      winning_combo = [0]
-      (@spaces_across - 1).times do
-        winning_combo << winning_combo.last + @spaces_across + 1
-      end
-      [winning_combo]
-    end
-
-    def top_right_to_bottom_left_win
-      winning_combo = [@spaces_across - 1]
-      (@spaces_across - 1).times do
-        winning_combo << winning_combo.last + @spaces_across - 1
-      end
-      [winning_combo]
-    end
+  def initialize(human_marker, starting_marker, spaces_across)
+    @spaces_across = spaces_across
+    @grid = [EMPTY_SPACE] * (spaces_across ** 2)
+    @winner = false
+    @human_marker = human_marker
+    @computer_marker = (@human_marker == X_MARKER ? O_MARKER : X_MARKER)
+    @computer_turns = 0
+    @turn = starting_marker
+    @winning_combos = calculate_winning_combos
   end
+
+  def deep_copy
+    Marshal::load(Marshal.dump(self))
+  end
+
+  def mark_board(index, marker)
+    @grid[index] = marker
+    @computer_turns += 1 if marker == @computer_marker
+    @turn = marker == @human_marker ? @computer_marker : @human_marker
+  end
+
+  def check_if_winner(marker)
+    marked_spaces = spaces_taken_by(marker)
+    find_winning_indices(marked_spaces).empty? ? false : @winner = marker
+  end
+
+  def board_full?
+    !@grid.include?(EMPTY_SPACE)
+  end
+
+  def find_spaces
+    @grid.each_index.select { |index| yield index } if block_given?
+  end
+
+  def all_taken_spaces
+    find_spaces { |index| @grid[index] == X_MARKER || @grid[index] == O_MARKER }
+  end
+
+  def all_free_spaces
+    find_spaces { |index| @grid[index] == EMPTY_SPACE }
+  end
+
+  def spaces_taken_by(marker)
+    find_spaces { |index| @grid[index] == marker }
+  end
+
+  def find_winning_indices(marked_spaces)
+    @winning_combos.select { |winning_combo| (marked_spaces & winning_combo).length == @spaces_across }.flatten
+  end
+
+  def is_there_a_winner?
+    check_if_winner(X_MARKER) || check_if_winner(O_MARKER)
+  end
+
+  def stop_playing?
+    is_there_a_winner? || board_full?
+  end
+
+  def calculate_winning_combos
+    horizontal_wins + vertical_wins + top_left_to_bottom_right_win + top_right_to_bottom_left_win
+  end
+
+  def horizontal_wins
+    (0..(@spaces_across ** 2 - 1)).each_slice(@spaces_across).to_a
+  end
+
+  def vertical_wins
+    horizontal_wins.transpose
+  end
+
+  def top_left_to_bottom_right_win
+    winning_combo = [0]
+    (@spaces_across - 1).times do
+      winning_combo << winning_combo.last + @spaces_across + 1
+    end
+    [winning_combo]
+  end
+
+  def top_right_to_bottom_left_win
+    winning_combo = [@spaces_across - 1]
+    (@spaces_across - 1).times do
+      winning_combo << winning_combo.last + @spaces_across - 1
+    end
+    [winning_combo]
+  end
+end
 
 # responsible for handling user input and updating game state for the human player
 class HumanPlayer
@@ -117,17 +117,38 @@ class ComputerPlayer
     @best_move[:space]
   end
 
-  def minimax(board)
+  def minimax(board, depth = 1, alpha = -100, beta = 100)
     return score(board) if board.stop_playing?
-    moves = []
-    board.all_free_spaces.each do |space|
-      potential_board = board.deep_copy
-      moves << (potential_move = {space: space, score: 0, marker: potential_board.turn})
-      potential_board.mark_board(potential_move[:space], potential_move[:marker])
-      potential_move[:score] = minimax(potential_board)
+    if board.turn == board.computer_marker
+      board.all_free_spaces.each do |space|
+        potential_board = board.deep_copy
+        potential_move = {space: space, score: 0, marker: potential_board.turn}
+        potential_board.mark_board(potential_move[:space], potential_move[:marker])
+        potential_move[:score] = minimax(potential_board, depth + 1, alpha, beta)
+        if potential_move[:score] > alpha
+          alpha = potential_move[:score]
+          @best_move = potential_move if depth == 1
+        end
+        if alpha >= beta
+          return alpha
+        end
+      end
+      alpha
+    else
+      board.all_free_spaces.each do |space|
+        potential_board = board.deep_copy
+        potential_move = {space: space, score: 0, marker: potential_board.turn}
+        potential_board.mark_board(potential_move[:space], potential_move[:marker])
+        potential_move[:score] = minimax(potential_board, depth + 1, alpha, beta)
+        if potential_move[:score] < beta
+          beta = potential_move[:score]
+        end
+        if alpha >= beta
+          return beta
+        end
+      end
+      beta
     end
-    @best_move = choose_best_move(moves, board)
-    @best_move[:score]
   end
 
   def choose_best_move(moves, board)
@@ -140,9 +161,9 @@ class ComputerPlayer
 
   def score(board)
     if board.winner == board.human_marker
-      -5 + board.computer_turns
+      -50 + board.computer_turns
     elsif board.winner == board.computer_marker
-      5 - board.computer_turns
+      50 - board.computer_turns
     else
       0
     end
@@ -206,7 +227,7 @@ class ConsoleUI
 
   def display_computer_instructions
     puts "Computer's turn. He's thinking."
-    sleep(1.5)
+    sleep(1)
   end
 
   def determine_board_size

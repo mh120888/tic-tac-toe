@@ -25,12 +25,18 @@ class Board
   def mark_board(index, marker)
     @grid[index] = marker
     @computer_turns += 1 if marker == @computer_marker
+    switch_turns(marker)
+    update_winner
+  end
+
+  def switch_turns(marker)
     @turn = marker == @human_marker ? @computer_marker : @human_marker
   end
 
   def check_if_winner(marker)
     marked_spaces = spaces_taken_by(marker)
-    find_winning_indices(marked_spaces).empty? ? false : @winner = marker
+    @winner = marker unless find_winning_indices(marked_spaces).empty?
+    @winner
   end
 
   def board_full?
@@ -57,12 +63,12 @@ class Board
     @winning_combos.select { |winning_combo| (marked_spaces & winning_combo).length == @spaces_across }.flatten
   end
 
-  def is_there_a_winner?
+  def update_winner
     check_if_winner(X_MARKER) || check_if_winner(O_MARKER)
   end
 
   def stop_playing?
-    is_there_a_winner? || board_full?
+    @winner || board_full?
   end
 
   def calculate_winning_combos

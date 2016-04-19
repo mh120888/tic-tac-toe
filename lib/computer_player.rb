@@ -1,6 +1,4 @@
 # logic for calculating the optimal move updating game state for the computer player
-require 'ruby-prof'
-
 class ComputerPlayer
   attr_reader :best_move
 

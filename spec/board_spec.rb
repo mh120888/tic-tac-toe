@@ -34,6 +34,27 @@ RSpec.describe Board do
     end
   end
 
+  describe "#valid_move?" do
+    it 'returns true for a valid move' do
+      expect(board.valid_move?(2)).to eq(true)
+    end
+
+    it 'returns false for an already marked space' do
+      board.mark_board(3, Board::X_MARKER)
+      expect(board.valid_move?(3)).to eq(false)
+    end
+
+    it 'returns false for a space that does not exist' do
+      expect(board.valid_move?(30)).to eq(false)
+    end
+  end
+
+  describe '#number_of_spaces' do
+    it 'returns the number of total spaces on a board' do
+      expect(board.number_of_spaces).to eq(9)
+    end
+  end
+
   describe '#board_full?' do
     it 'returns false for a new board' do
       expect(board.board_full?).to eq(false)

@@ -8,7 +8,7 @@ class ComputerPlayer
   end
 
   def negamax(board, depth = 1, alpha = -100, beta = 100, color = 1)
-    return score(board) * color if board.stop_playing?
+    return score(board, depth) * color if board.stop_playing?
     board.all_free_spaces.each do |space|
       potential_board = board.deep_copy
       potential_move = {space: space, score: 0, marker: potential_board.turn}
@@ -25,11 +25,11 @@ class ComputerPlayer
     alpha
   end
 
-  def score(board)
+  def score(board, depth)
     if board.winner == board.human_marker
-      -50 + board.computer_turns
+      -50 + depth
     elsif board.winner == board.computer_marker
-      50 - board.computer_turns
+      50 - depth
     else
       0
     end

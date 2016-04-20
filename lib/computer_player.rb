@@ -12,10 +12,10 @@ class ComputerPlayer
   def negamax(board, depth = 1, alpha = -100, beta = 100, color = 1)
     return score(board, depth) * color if board.stop_playing?
     board.all_free_spaces.each do |space|
-      potential_board = board.deep_copy
-      potential_move = {space: space, score: 0, marker: potential_board.turn}
-      potential_board.mark_board(potential_move[:space], potential_move[:marker])
-      potential_move[:score] = -negamax(potential_board, depth + 1, -beta, -alpha, -color)
+      potential_move = {space: space, score: 0, marker: board.turn}
+      board.mark_board(potential_move[:space], potential_move[:marker])
+      potential_move[:score] = -negamax(board, depth + 1, -beta, -alpha, -color)
+      board.unmark_board(potential_move[:space])
       if potential_move[:score] > alpha
         alpha = potential_move[:score]
         @best_move = potential_move if depth == 1
@@ -26,6 +26,7 @@ class ComputerPlayer
     end
     alpha
   end
+
 
   def score(board, depth)
     if board.winner == board.human_marker

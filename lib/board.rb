@@ -23,18 +23,27 @@ class Board
 
   def mark_board(index, marker)
     @grid[index] = marker
-    switch_turns(marker)
+    switch_turns
     update_winner
   end
 
-  def switch_turns(marker)
-    @turn = marker == @human_marker ? @computer_marker : @human_marker
+  def unmark_board(index)
+    @grid[index] = Board::EMPTY_SPACE
+    switch_turns
+    update_winner
+  end
+
+  def switch_turns
+    @turn = (@turn == @human_marker) ? @computer_marker : @human_marker
   end
 
   def check_if_winner(marker)
     marked_spaces = spaces_taken_by(marker)
-    @winner = marker unless find_winning_indices(marked_spaces).empty?
-    @winner
+    if find_winning_indices(marked_spaces).empty?
+      @winner = false
+    else
+      @winner = marker
+    end
   end
 
   def valid_move?(index)

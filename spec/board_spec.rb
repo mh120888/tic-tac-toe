@@ -20,6 +20,32 @@ RSpec.describe Board do
     end
   end
 
+  describe '#unmark_board' do
+    it 'removes a mark from the board at a given spot' do
+      spot_to_mark = rand(9)
+      board.mark_board(spot_to_mark, Board::X_MARKER)
+      board.unmark_board(spot_to_mark)
+      expect(board.grid[spot_to_mark]).to eq(Board::EMPTY_SPACE)
+    end
+
+    it 'switches turns' do
+      first_player = board.turn
+      board.mark_board(1, first_player)
+      second_player = board.turn
+      board.unmark_board(1)
+      expect(board.turn).to eq(first_player)
+    end
+
+    it 'updates the winner' do
+      board.mark_board(0, Board::X_MARKER)
+      board.mark_board(1, Board::X_MARKER)
+      board.mark_board(2, Board::X_MARKER)
+      expect(board.winner).to equal(Board::X_MARKER)
+      board.unmark_board(2)
+      expect(board.winner).to equal(false)
+    end
+  end
+
   describe '#check_if_winner' do
     it "returns false if there is no winner" do
       expect(board.check_if_winner(Board::X_MARKER)).to eq(false)

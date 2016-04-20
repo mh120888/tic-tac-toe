@@ -1,6 +1,5 @@
 require_relative '../lib/human_player'
 require_relative '../lib/board'
-require 'pry'
 
 RSpec.describe HumanPlayer do
   let(:board) { Board.new(Board::X_MARKER, Board::O_MARKER, 3) }

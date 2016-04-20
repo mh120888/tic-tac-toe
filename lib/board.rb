@@ -1,6 +1,6 @@
 # represents game state for tie tac toe
 class Board
-  attr_reader :winner, :human_marker, :computer_marker, :computer_turns, :turn, :grid, :winning_combos, :spaces_across
+  attr_reader :winner, :human_marker, :computer_marker, :turn, :grid, :winning_combos, :spaces_across
   attr_accessor :human_marker
 
   EMPTY_SPACE = ''.freeze
@@ -13,7 +13,6 @@ class Board
     @winner = false
     @human_marker = human_marker
     @computer_marker = (@human_marker == X_MARKER ? O_MARKER : X_MARKER)
-    @computer_turns = 0
     @turn = starting_marker
     @winning_combos = calculate_winning_combos
   end
@@ -24,7 +23,6 @@ class Board
 
   def mark_board(index, marker)
     @grid[index] = marker
-    @computer_turns += 1 if marker == @computer_marker
     switch_turns(marker)
     update_winner
   end
@@ -39,8 +37,16 @@ class Board
     @winner
   end
 
+  def valid_move?(index)
+    grid[index] == Board::EMPTY_SPACE
+  end
+
   def board_full?
     !@grid.include?(EMPTY_SPACE)
+  end
+
+  def number_of_spaces
+    @grid.length
   end
 
   def find_spaces

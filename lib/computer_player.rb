@@ -7,6 +7,8 @@ class ComputerPlayer
     @best_move[:space]
   end
 
+  private
+
   def negamax(board, depth = 1, alpha = -100, beta = 100, color = 1)
     return score(board, depth) * color if board.stop_playing?
     board.all_free_spaces.each do |space|

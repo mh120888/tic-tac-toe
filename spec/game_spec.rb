@@ -27,5 +27,4 @@ RSpec.describe Game do
       expect(game.switch_players(computer_player)).to eq(human_player)
     end
   end
-
 end

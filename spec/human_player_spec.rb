@@ -6,9 +6,8 @@ RSpec.describe HumanPlayer do
   let(:human_player) { HumanPlayer.new }
 
   describe "#find_move" do
-    it 'returns a valid move' do
+    it 'confirms a valid move and returns it' do
       expect(human_player.find_move(board, 1)).to eq(1)
     end
   end
-
 end

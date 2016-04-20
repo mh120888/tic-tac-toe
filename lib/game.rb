@@ -1,6 +1,6 @@
 # responsible for program/game flow
 class Game
-  attr_reader :board, :computer_player
+  attr_reader :board, :computer_player, :human_player
 
   def initialize
     @human_player = HumanPlayer.new
@@ -23,8 +23,8 @@ class Game
     @ui.display_result(@board)
   end
 
-  def determine_starting_marker(player, human_marker)
-    player == @human_player ? human_marker : ([Board::X_MARKER, Board::O_MARKER] - [human_marker]).first
+  def determine_starting_marker(starting_player, human_marker)
+    starting_player == @human_player ? human_marker : ([Board::X_MARKER, Board::O_MARKER] - [human_marker]).first
   end
 
   def switch_players(current_player)

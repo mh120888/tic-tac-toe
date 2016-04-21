@@ -47,7 +47,7 @@ class Board
   end
 
   def valid_move?(index)
-    grid[index] == Board::EMPTY_SPACE
+    grid[index] == Board::EMPTY_SPACE && index > 0
   end
 
   def board_full?

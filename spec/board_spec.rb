@@ -73,6 +73,10 @@ RSpec.describe Board do
     it 'returns false for a space that does not exist' do
       expect(board.valid_move?(30)).to eq(false)
     end
+
+    it 'returns false for a int less than 0' do
+      expect(board.valid_move?(-1)).to eq(false)
+    end
   end
 
   describe '#number_of_spaces' do
